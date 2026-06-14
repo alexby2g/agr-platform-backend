@@ -18,11 +18,25 @@ class Modulo extends Model
         'activo'
     ];
 
+    protected $casts = [
+        'activo' => 'boolean',
+    ];
+
     public function empresas()
     {
         return $this->belongsToMany(
             Empresa::class,
             'empresa_modulos'
-        );
+        )->withTimestamps();
+    }
+
+    public function usuarios()
+    {
+        return $this->belongsToMany(
+            UsuarioSistema::class,
+            'usuario_modulos',
+            'modulo_id',
+            'usuario_sistema_id'
+        )->withTimestamps();
     }
 }

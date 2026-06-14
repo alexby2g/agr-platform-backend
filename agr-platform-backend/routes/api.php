@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EmpresaController;
 use App\Http\Controllers\Api\EmpresaModuloController;
 use App\Http\Controllers\Api\UsuarioSistemaController;
+use App\Http\Controllers\Api\UsuarioModuloController;
 use App\Http\Controllers\Api\ModuloController;
 
 // AUREA BEAUTY
@@ -43,10 +44,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/empresas/{empresa}/modulos', [EmpresaModuloController::class, 'update']);
 
     Route::apiResource('usuarios-sistema', UsuarioSistemaController::class);
+
+    Route::get('/usuarios-sistema/{usuario}/modulos', [UsuarioModuloController::class, 'index']);
+    
+    Route::post('/usuarios-sistema/{usuario}/modulos', [UsuarioModuloController::class, 'update']);
+    
     Route::apiResource('modulos', ModuloController::class);
 
     Route::get('/user', function (Request $request) {
         return $request->user();
+
     });
 
     // ==========================

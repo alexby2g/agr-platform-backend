@@ -82,8 +82,52 @@ class UsuarioSistema extends Authenticatable
         return $this->rol === self::ROL_EMPLEADO;
     }
 
+    /**
+     * Empresa a la que pertenece el usuario.
+     */
     public function empresa()
     {
         return $this->belongsTo(Empresa::class);
+    }
+
+    /**
+     * Módulos asignados directamente al usuario.
+     * Solo se usarán para empleados.
+     */
+    public function modulos()
+    {
+        return $this->belongsToMany(
+            Modulo::class,
+            'usuario_modulos',
+            'usuario_sistema_id',
+            'modulo_id'
+        )->withTimestamps();
+    }
+
+    /**
+     * Devuelve los módulos permitidos para el usuario.
+     */
+    public function obtenerModulosPermitidos()
+    {
+        if ($this->esSuperAdmin()) {
+            return Modulo::where('activo', true)
+                ->orderBy('id')
+                ->get();
+        }
+
+        if ($this->esAdministrador()) {
+            return $this->empresa
+                ? $this->empresa
+                    ->modulos()
+                    ->where('modulos.activo', true)
+                    ->orderBy('modulos.id')
+                    ->get()
+                : collect();
+        }
+
+        return $this->modulos()
+            ->where('modulos.activo', true)
+            ->orderBy('modulos.id')
+            ->get();
     }
 }

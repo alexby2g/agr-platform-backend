@@ -17,7 +17,7 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        $usuario = UsuarioSistema::with('empresa')
+        $usuario = UsuarioSistema::with(['empresa', 'modulos'])
             ->where('usuario', $request->usuario)
             ->first();
 
@@ -43,6 +43,7 @@ class AuthController extends Controller
 
         if ($usuario->rol !== $rolNormalizado) {
             $usuario->update(['rol' => $rolNormalizado]);
+            $usuario->rol = $rolNormalizado;
         }
 
         $usuario->forceFill([
@@ -53,7 +54,7 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'usuario' => $this->presentarUsuario($usuario->load('empresa')),
+            'usuario' => $this->presentarUsuario($usuario->load(['empresa', 'modulos'])),
             'rol' => $usuario->rol,
         ]);
     }
@@ -61,13 +62,13 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         return response()->json(
-            $this->presentarUsuario($request->user()->load('empresa'))
+            $this->presentarUsuario($request->user()->load(['empresa', 'modulos']))
         );
     }
 
     public function launcher(Request $request)
     {
-        $usuario = $request->user()->load('empresa');
+        $usuario = $request->user()->load(['empresa', 'modulos']);
 
         if (!$usuario->activo) {
             return response()->json([
@@ -79,13 +80,14 @@ class AuthController extends Controller
 
         if ($usuario->rol !== $rolNormalizado) {
             $usuario->update(['rol' => $rolNormalizado]);
+            $usuario->rol = $rolNormalizado;
         }
 
-        if ($usuario->rol === UsuarioSistema::ROL_SUPER_ADMIN) {
+        if ($usuario->esSuperAdmin()) {
             $modulos = Modulo::where('activo', true)
                 ->orderBy('id', 'asc')
                 ->get();
-        } else {
+        } elseif ($usuario->esAdministrador()) {
             $modulos = $usuario->empresa
                 ? $usuario->empresa
                     ->modulos()
@@ -93,11 +95,17 @@ class AuthController extends Controller
                     ->orderBy('modulos.id', 'asc')
                     ->get()
                 : collect();
+        } else {
+            $modulos = $usuario
+                ->modulos()
+                ->where('modulos.activo', true)
+                ->orderBy('modulos.id', 'asc')
+                ->get();
         }
 
         return response()->json([
             'usuario' => $this->presentarUsuario($usuario),
-            'modulos' => $modulos,
+            'modulos' => $modulos->values(),
         ]);
     }
 
@@ -125,6 +133,7 @@ class AuthController extends Controller
             'rol_nombre' => $usuario->rol_nombre,
             'activo' => (bool) $usuario->activo,
             'ultimo_acceso' => $usuario->ultimo_acceso,
+            'modulos_asignados' => $usuario->modulos->pluck('id')->values(),
         ];
     }
 }
