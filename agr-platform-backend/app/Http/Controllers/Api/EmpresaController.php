@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Empresa;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class EmpresaController extends Controller
 {
@@ -17,24 +18,32 @@ class EmpresaController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'slug' => 'required|string|unique:empresas,slug'
+        $data = $request->validate([
+            'nombre' => ['required', 'string', 'max:255'],
+            'slug' => ['required', 'string', 'max:255', 'unique:empresas,slug'],
+            'logo' => ['nullable', 'string', 'max:2048'],
+            'color_primario' => ['nullable', 'string', 'max:20'],
+            'color_secundario' => ['nullable', 'string', 'max:20'],
+            'plan' => ['nullable', Rule::in(Empresa::planesPermitidos())],
+            'fecha_vencimiento' => ['nullable', 'date'],
+            'activo' => ['nullable', 'boolean'],
         ]);
 
         $empresa = Empresa::create([
-            'nombre' => $request->nombre,
-            'slug' => $request->slug,
-            'logo' => $request->logo,
-            'color_primario' => $request->color_primario ?? '#4f46e5',
-            'color_secundario' => $request->color_secundario ?? '#9333ea',
-            'activo' => true
+            'nombre' => $data['nombre'],
+            'slug' => $data['slug'],
+            'logo' => $data['logo'] ?? null,
+            'color_primario' => $data['color_primario'] ?? '#ec4899',
+            'color_secundario' => $data['color_secundario'] ?? '#9333ea',
+            'plan' => $data['plan'] ?? Empresa::PLAN_BASICO,
+            'fecha_vencimiento' => $data['fecha_vencimiento'] ?? null,
+            'activo' => $data['activo'] ?? true,
         ]);
 
         return response()->json([
             'message' => 'Empresa creada correctamente',
             'empresa' => $empresa
-        ]);
+        ], 201);
     }
 
     public function show(string $id)
@@ -48,18 +57,26 @@ class EmpresaController extends Controller
     {
         $empresa = Empresa::findOrFail($id);
 
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'slug' => 'required|string|unique:empresas,slug,' . $empresa->id
+        $data = $request->validate([
+            'nombre' => ['required', 'string', 'max:255'],
+            'slug' => ['required', 'string', 'max:255', Rule::unique('empresas', 'slug')->ignore($empresa->id)],
+            'logo' => ['nullable', 'string', 'max:2048'],
+            'color_primario' => ['nullable', 'string', 'max:20'],
+            'color_secundario' => ['nullable', 'string', 'max:20'],
+            'plan' => ['nullable', Rule::in(Empresa::planesPermitidos())],
+            'fecha_vencimiento' => ['nullable', 'date'],
+            'activo' => ['required', 'boolean'],
         ]);
 
         $empresa->update([
-            'nombre' => $request->nombre,
-            'slug' => $request->slug,
-            'logo' => $request->logo,
-            'color_primario' => $request->color_primario,
-            'color_secundario' => $request->color_secundario,
-            'activo' => $request->activo
+            'nombre' => $data['nombre'],
+            'slug' => $data['slug'],
+            'logo' => $data['logo'] ?? null,
+            'color_primario' => $data['color_primario'] ?? '#ec4899',
+            'color_secundario' => $data['color_secundario'] ?? '#9333ea',
+            'plan' => $data['plan'] ?? Empresa::PLAN_BASICO,
+            'fecha_vencimiento' => $data['fecha_vencimiento'] ?? null,
+            'activo' => $data['activo'],
         ]);
 
         return response()->json([

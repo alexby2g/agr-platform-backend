@@ -9,14 +9,50 @@ class Empresa extends Model
 {
     use HasFactory;
 
+    public const PLAN_BASICO = 'basico';
+    public const PLAN_PROFESIONAL = 'profesional';
+    public const PLAN_EMPRESARIAL = 'empresarial';
+
     protected $fillable = [
         'nombre',
         'slug',
         'logo',
         'color_primario',
         'color_secundario',
+        'plan',
+        'fecha_vencimiento',
         'activo'
     ];
+
+    protected $casts = [
+        'activo' => 'boolean',
+        'fecha_vencimiento' => 'date',
+    ];
+
+    public static function planesPermitidos(): array
+    {
+        return [
+            self::PLAN_BASICO,
+            self::PLAN_PROFESIONAL,
+            self::PLAN_EMPRESARIAL,
+        ];
+    }
+
+    public function getPlanNombreAttribute(): string
+    {
+        return match ($this->plan) {
+            self::PLAN_PROFESIONAL => 'Profesional',
+            self::PLAN_EMPRESARIAL => 'Empresarial',
+            default => 'Básico',
+        };
+    }
+
+    public function getVencidaAttribute(): bool
+    {
+        return $this->fecha_vencimiento
+            ? now()->startOfDay()->greaterThan($this->fecha_vencimiento)
+            : false;
+    }
 
     public function usuarios()
     {
@@ -28,6 +64,6 @@ class Empresa extends Model
         return $this->belongsToMany(
             Modulo::class,
             'empresa_modulos'
-        );
+        )->withTimestamps();
     }
 }

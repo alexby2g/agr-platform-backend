@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('empresas', function (Blueprint $table) {
@@ -16,16 +13,15 @@ return new class extends Migration
             $table->string('nombre');
             $table->string('slug')->unique();
             $table->string('logo')->nullable();
-            $table->string('color_primario')->default('#4f46e5');
+            $table->string('color_primario')->default('#ec4899');
             $table->string('color_secundario')->default('#9333ea');
+            $table->string('plan')->default('basico');
+            $table->date('fecha_vencimiento')->nullable();
             $table->boolean('activo')->default(true);
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('empresas');
