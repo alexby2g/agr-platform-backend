@@ -26,9 +26,9 @@ return new class extends Migration
 
             $table->enum('rol', [
                 'super_admin',
-                'admin_empresa',
-                'usuario'
-            ])->default('usuario');
+                'administrador',
+                'empleado'
+            ])->default('empleado');
 
             $table->boolean('activo')->default(true);
             $table->timestamp('ultimo_acceso')->nullable();

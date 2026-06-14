@@ -7,6 +7,7 @@ use App\Models\Modulo;
 use App\Models\UsuarioSistema;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class AgrPlatformSeeder extends Seeder
 {
@@ -101,5 +102,14 @@ class AgrPlatformSeeder extends Seeder
                 'activo' => true
             ]
         );
+
+        // NORMALIZAR ROLES ANTIGUOS
+        DB::table('usuario_sistemas')
+            ->where('rol', 'admin_empresa')
+            ->update(['rol' => 'administrador']);
+
+        DB::table('usuario_sistemas')
+            ->where('rol', 'usuario')
+            ->update(['rol' => 'empleado']);
     }
 }

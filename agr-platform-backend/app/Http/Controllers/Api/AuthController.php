@@ -14,7 +14,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'usuario' => 'required',
-            'password' => 'required'
+            'password' => 'required',
         ]);
 
         $usuario = UsuarioSistema::with('empresa')
@@ -23,44 +23,45 @@ class AuthController extends Controller
 
         if (!$usuario) {
             return response()->json([
-                'message' => 'Usuario no encontrado'
+                'message' => 'Usuario no encontrado',
             ], 401);
         }
 
         if (!$usuario->activo) {
             return response()->json([
-                'message' => 'Usuario inactivo. Contacta al administrador.'
+                'message' => 'Usuario inactivo. Contacta al administrador.',
             ], 403);
         }
 
         if (!Hash::check($request->password, $usuario->password)) {
             return response()->json([
-                'message' => 'Contraseña incorrecta'
+                'message' => 'Contraseña incorrecta',
             ], 401);
         }
+
+        $rolNormalizado = UsuarioSistema::normalizarRol($usuario->rol);
+
+        if ($usuario->rol !== $rolNormalizado) {
+            $usuario->update(['rol' => $rolNormalizado]);
+        }
+
+        $usuario->forceFill([
+            'ultimo_acceso' => now(),
+        ])->save();
 
         $token = $usuario->createToken('agr-platform')->plainTextToken;
 
         return response()->json([
             'token' => $token,
-            'usuario' => [
-                'id' => $usuario->id,
-                'empresa_id' => $usuario->empresa_id,
-                'empresa' => $usuario->empresa,
-                'nombre' => $usuario->nombre,
-                'usuario' => $usuario->usuario,
-                'email' => $usuario->email,
-                'rol' => $usuario->rol,
-                'activo' => $usuario->activo
-            ],
-            'rol' => $usuario->rol
+            'usuario' => $this->presentarUsuario($usuario->load('empresa')),
+            'rol' => $usuario->rol,
         ]);
     }
 
     public function me(Request $request)
     {
         return response()->json(
-            $request->user()->load('empresa')
+            $this->presentarUsuario($request->user()->load('empresa'))
         );
     }
 
@@ -70,11 +71,17 @@ class AuthController extends Controller
 
         if (!$usuario->activo) {
             return response()->json([
-                'message' => 'Usuario inactivo'
+                'message' => 'Usuario inactivo',
             ], 403);
         }
 
-        if ($usuario->rol === 'super_admin') {
+        $rolNormalizado = UsuarioSistema::normalizarRol($usuario->rol);
+
+        if ($usuario->rol !== $rolNormalizado) {
+            $usuario->update(['rol' => $rolNormalizado]);
+        }
+
+        if ($usuario->rol === UsuarioSistema::ROL_SUPER_ADMIN) {
             $modulos = Modulo::where('activo', true)
                 ->orderBy('id', 'asc')
                 ->get();
@@ -89,17 +96,8 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'usuario' => [
-                'id' => $usuario->id,
-                'empresa_id' => $usuario->empresa_id,
-                'empresa' => $usuario->empresa,
-                'nombre' => $usuario->nombre,
-                'usuario' => $usuario->usuario,
-                'email' => $usuario->email,
-                'rol' => $usuario->rol,
-                'activo' => $usuario->activo
-            ],
-            'modulos' => $modulos
+            'usuario' => $this->presentarUsuario($usuario),
+            'modulos' => $modulos,
         ]);
     }
 
@@ -110,7 +108,23 @@ class AuthController extends Controller
             ->delete();
 
         return response()->json([
-            'message' => 'Sesión cerrada'
+            'message' => 'Sesión cerrada',
         ]);
+    }
+
+    private function presentarUsuario(UsuarioSistema $usuario): array
+    {
+        return [
+            'id' => $usuario->id,
+            'empresa_id' => $usuario->empresa_id,
+            'empresa' => $usuario->empresa,
+            'nombre' => $usuario->nombre,
+            'usuario' => $usuario->usuario,
+            'email' => $usuario->email,
+            'rol' => UsuarioSistema::normalizarRol($usuario->rol),
+            'rol_nombre' => $usuario->rol_nombre,
+            'activo' => (bool) $usuario->activo,
+            'ultimo_acceso' => $usuario->ultimo_acceso,
+        ];
     }
 }
