@@ -7,6 +7,7 @@ use App\Models\UsuarioSistema;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use App\Support\AureaPermisos;
 
 class UsuarioSistemaController extends Controller
 {
@@ -138,6 +139,7 @@ class UsuarioSistemaController extends Controller
             'ultimo_acceso' => $usuario->ultimo_acceso,
             'created_at' => $usuario->created_at,
             'updated_at' => $usuario->updated_at,
+            'permisos' => AureaPermisos::paraUsuario($usuario),
         ];
     }
 }

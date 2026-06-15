@@ -5,6 +5,7 @@ namespace App\Models;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Support\AureaPermisos;
 
 class UsuarioSistema extends Authenticatable
 {
@@ -129,5 +130,10 @@ class UsuarioSistema extends Authenticatable
             ->where('modulos.activo', true)
             ->orderBy('modulos.id')
             ->get();
+    }
+
+    public function permisosAurea(): array
+    {
+        return AureaPermisos::paraUsuario($this);
     }
 }

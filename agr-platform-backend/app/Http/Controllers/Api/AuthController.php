@@ -7,6 +7,7 @@ use App\Models\UsuarioSistema;
 use App\Models\Modulo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Support\AureaPermisos;
 
 class AuthController extends Controller
 {
@@ -134,6 +135,7 @@ class AuthController extends Controller
             'activo' => (bool) $usuario->activo,
             'ultimo_acceso' => $usuario->ultimo_acceso,
             'modulos_asignados' => $usuario->modulos->pluck('id')->values(),
+            'permisos' => AureaPermisos::paraUsuario($usuario),
         ];
     }
 }
