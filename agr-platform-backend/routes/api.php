@@ -57,6 +57,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('modulos', ModuloController::class);
     });
 
+
+    // ==========================
+    // USUARIOS DE LA EMPRESA / AUREA
+    // ==========================
+    Route::middleware('rol.sistema:super_admin,administrador')->group(function () {
+        Route::get('/mi-empresa/usuarios', [UsuarioSistemaController::class, 'usuariosEmpresa']);
+        Route::post('/mi-empresa/usuarios', [UsuarioSistemaController::class, 'storeEmpresa']);
+        Route::put('/mi-empresa/usuarios/{id}', [UsuarioSistemaController::class, 'updateEmpresa']);
+        Route::delete('/mi-empresa/usuarios/{id}', [UsuarioSistemaController::class, 'destroyEmpresa']);
+    });
+
     // ==========================
     // AUREA BEAUTY API ORIGINAL CON PERMISOS INTERNOS
     // ==========================

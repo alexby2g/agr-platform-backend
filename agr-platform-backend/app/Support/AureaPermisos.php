@@ -42,6 +42,11 @@ class AureaPermisos
             'aurea.empleados.eliminar',
             'aurea.empleados.comisiones',
 
+            'aurea.usuarios.ver',
+            'aurea.usuarios.crear',
+            'aurea.usuarios.editar',
+            'aurea.usuarios.eliminar',
+
             'aurea.caja.ver',
             'aurea.historial.ver',
             'aurea.historial.restaurar',

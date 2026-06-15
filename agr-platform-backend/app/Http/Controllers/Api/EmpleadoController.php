@@ -10,6 +10,7 @@ use App\Models\UsuarioSistema;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class EmpleadoController extends Controller
@@ -201,12 +202,13 @@ class EmpleadoController extends Controller
     private function crearCuentaEmpleado(Request $request, Empleado $empleado): UsuarioSistema
     {
         return UsuarioSistema::create([
+            'empresa_id' => $request->user()?->empresa_id,
+            'empleado_id' => $empleado->id,
             'nombre' => $empleado->nombre,
             'usuario' => $this->normalizarEmail($request->input('usuario_login') ?: $empleado->email),
-            'password' => trim((string) $request->input('password_usuario')),
+            'email' => $this->normalizarEmail($request->input('usuario_login') ?: $empleado->email),
+            'password' => Hash::make(trim((string) $request->input('password_usuario'))),
             'rol' => 'empleado',
-            'empleado_id' => $empleado->id,
-            'token' => null,
             'activo' => $this->valorBooleano($request, 'activo_usuario', true),
             'ultimo_acceso' => null,
         ]);
@@ -222,10 +224,11 @@ class EmpleadoController extends Controller
 
         if ($request->has('usuario_login')) {
             $datosCuenta['usuario'] = $this->normalizarEmail($request->input('usuario_login'));
+            $datosCuenta['email'] = $this->normalizarEmail($request->input('usuario_login'));
         }
 
         if ($request->has('password_usuario') && trim((string) $request->input('password_usuario')) !== '') {
-            $datosCuenta['password'] = trim((string) $request->input('password_usuario'));
+            $datosCuenta['password'] = Hash::make(trim((string) $request->input('password_usuario')));
         }
 
         if ($request->has('activo_usuario')) {

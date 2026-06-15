@@ -29,6 +29,11 @@ class Empresa extends Model
         'fecha_vencimiento' => 'date',
     ];
 
+    protected function serializeDate(\DateTimeInterface $date): string
+    {
+        return $date->format('Y-m-d');
+    }
+
     public static function planesPermitidos(): array
     {
         return [
